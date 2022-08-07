@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 
-import urllib
+import io
 import pymongo
+import urllib
+from PIL import Image
 from blizzard import Blizzard
 
 blizzard = Blizzard()
@@ -9,8 +11,6 @@ blizzard = Blizzard()
 client = pymongo.MongoClient('mongodb://localhost:27017/')
 db = client['scuffers']
 collection = db['class_info']
-
-collection.delete_many({})
 
 spec_type = {
     62: 'range',
@@ -81,45 +81,54 @@ class_color = {
     'priest': '#FFFFFF'
 }
 
-character_specializations = blizzard.game_playable_specialization_index()
-class_indexes = blizzard.game_playable_class_index()
+def init_setup():
+    collection.delete_many({})
 
-for class_index in class_indexes['classes']:
-    current_class = blizzard.game_playable_class(class_index['id'])
-    class_dict = {
-        'class_name': current_class['name'],
-        'class_id': current_class['id'],
-        'class_color': class_color[current_class['name'].lower()],
-        'class_media': IMG_PATH + current_class['name'] + '.jpg',
-        'gear_type': gear_type[current_class['id']]
+    class_indexes = blizzard.game_playable_class_index()
 
-    }
-    class_media = blizzard.game_playable_class_media(current_class['id'])
-    class_media = class_media['assets'][0]['value']
+    for class_index in class_indexes['classes']:
+        current_class = blizzard.game_playable_class(class_index['id'])
+        print(f"Getting info for {current_class['name']}")
+        class_dict = dict()   
+        class_dict[current_class['name']] = {
+            'id': current_class['id'],
+            'color': class_color[current_class['name'].lower()], 
+            'gear_type': gear_type[current_class['id']],
+            'specialization': dict()
+        } 
 
-    urllib.request.urlretrieve(class_media, IMG_PATH + current_class['name'] + '.jpg')
+        img_bytes   = io.BytesIO()
+        class_media = current_class['_links']['self']['href']
+        class_media = blizzard.generic_call(class_media)
+        class_media = class_media['media']['key']['href']
+        class_media = blizzard.generic_call(class_media)
+        class_media = class_media['assets'][0]['value']
+        urllib.request.urlretrieve(class_media, f"/tmp/{current_class['name']}.jpg")
+        with Image.open(f'/tmp/{current_class["name"]}.jpg') as class_img:
+            class_img.save(img_bytes, format='JPEG')
+            class_dict[current_class['name']]['image']=img_bytes.getvalue()
 
-    specializations = []
-    for specialization in current_class['specializations']:
-        current_specialization = blizzard.game_playable_specialization(specialization['id'])
-        if current_specialization is None:
-            print('ERROR: {}'.format(specialization['name']))
-        else:
-            spec_dict = {
-                'specialization_name': current_specialization['name'],
-                'specialization_id ': current_specialization['id'],
-                'role': current_specialization['role']['name'],
-                'role_type': spec_type[current_specialization['id']],
-                'spec_media': IMG_PATH + current_specialization['name'] + '.jpg'
+        for specialization in current_class['specializations']:
+            current_specialization = blizzard.game_playable_specialization(specialization['id'])
+            print(f"\t{current_specialization['name']}")
+            
+            specialization_dict = {
+            'specialization_id ': current_specialization['id'],
+            'role': current_specialization['role']['name'],
+            'role_type': spec_type[current_specialization['id']],
             }
 
+            img_bytes  = io.BytesIO()
             spec_media = current_specialization['media']['key']['href']
             spec_media = blizzard.generic_call(spec_media)
             spec_media = spec_media['assets'][0]['value']
-            urllib.request.urlretrieve(spec_media, IMG_PATH + spec_dict['specialization_name'] + '.jpg')
+            urllib.request.urlretrieve(spec_media, f"/tmp/{current_specialization['name']}")
+            with Image.open(f"/tmp/{current_specialization['name']}") as spec_img:
+                spec_img.save(img_bytes, format='JPEG')
+                specialization_dict['image'] = img_bytes.getvalue()
+            class_dict[current_class['name']]['specialization'][current_specialization['name']]=specialization_dict
+        collection.insert_one(class_dict)
+print('DONE')
 
-            specializations.append(spec_dict)
-
-    class_dict['specialization'] = specializations
-    collection.insert_one(class_dict)
-
+if __name__ == '__main__':
+    init_setup()

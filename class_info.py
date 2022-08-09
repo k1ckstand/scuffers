@@ -88,7 +88,7 @@ def init_setup():
 
     for class_index in class_indexes['classes']:
         current_class = blizzard.game_playable_class(class_index['id'])
-        print(f"Getting info for {current_class['name']}")
+        print(current_class['name'])
         class_dict = dict()   
         class_dict[current_class['name']] = {
             'id': current_class['id'],
@@ -128,7 +128,7 @@ def init_setup():
                 specialization_dict['image'] = img_bytes.getvalue()
             class_dict[current_class['name']]['specialization'][current_specialization['name']]=specialization_dict
         collection.insert_one(class_dict)
-print('DONE')
+    print('DONE')
 
 if __name__ == '__main__':
     init_setup()

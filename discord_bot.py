@@ -11,14 +11,14 @@ import matplotlib.pyplot as plt
 TOKEN = os.getenv('DISCORD_TOKEN')
 
 my_client = pymongo.MongoClient('mongodb://localhost:27017/')
-db = my_client['hyjal']
+db = my_client['scuffers']
 
 intents = discord.Intents.all()
 bot = commands.Bot(command_prefix='#', intents=intents)
 
 @bot.event
 async def on_ready():
-    print("{} is here. You're welcome".format(bot.user.name))
+    print(f'{bot.user.name} is here. You\'re welcome')
 
 @bot.command(name='wa_sound')
 async def wa_sound(ctx, s: str):
@@ -95,66 +95,6 @@ async def get_discord_users(ctx):
         print(user.id)
         print(user.roles)
 
-
-
-bot.run(TOKEN)
-
-
-
-    # name = "opprobrious"
-    # compleated_dungeons = {}
-    # dungeons = collection.find( { }).distinct('name')
-    # for dungeon in dungeons:
-    #     compleated_dungeons[dungeon] = False
-    # for player in collection.find( { 'discord': name }, {'_id': 0, 'name': 1} ):
-    #     print(player['name'])
-    #     somethign = db['m_plus_season_5'].count_documents( { 
-    #         'leading_groups.members.profile.name': re.compile(player['name'], re.IGNORECASE),
-    #         'leading_groups.keystone_level': { '$gte': 15 },
-    #         'leading_groups': { '$lte': { 'duration': 'dungeon_time.0.qualifying_duration' } }
-    #         } )
-    #     print(somethign)
-
-    # results = db['m_plus_achievement'].find_one( {'name': name} )
-    # send_me = '' # "target_player" + ' ( ' + "player"['b_tag'] + ' )\n'
-    # send_me += '-' * 27
-    # send_me += '\n'
-    # for dungeon in results['dungeons']:
-    #     send_me += dungeon
-    #     send_me += ' ' * (22 - len(dungeon))
-    #     send_me += ' | '
-    #     if results['dungeons'][dungeon]:
-    #         send_me += '\U00002705'
-    #     else:
-    #         send_me += '\U0000274C'
-    #     send_me += '\n'
-    #     send_me = '```' + send_me + '```'
-    # await ctx.send(send_me)
-
-
-
-
-# @client.event
-# async def on_message(message):
-#     if message.author == client.user:
-#         return
-
-#     elif message.content.startswith('#m_plus'):
-#         author =  message.author.name
-#         current_message = message.content.split(' ')[1:]
-#         if len(current_message) > 0:
-#             for player in current_message:
-#                 m_plus_achivment(player)
-#         else:
-#             print("SDFSDFSF")
-#             m_plus_achivment(message.author.name)
-        # if collection.find_one( { 'discord': author} ):
-        #     my_message = m_plus_achivment(author)
-        # if collection.find_one( { 'name': author }, { '_id': 0, 'discord': 1 } ):
-        #     print(discord)
-        # print(my_message)
-            # print(send_me)
-            # await message.channel.send(send_me)
 
 
 bot.run(TOKEN)

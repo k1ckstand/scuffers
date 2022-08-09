@@ -32,7 +32,7 @@ class Blizzard:
         r = requests.get(f'https://us.api.blizzard.com/data/wow/mythic-keystone/period/index?namespace=dynamic-us&locale=en_US&access_token={self.access_token}')
         return r.json()
 
-    def game_mythic_keystone_leaderboard(self, dungeon_id, period, cr_id=57):
+    def game_mythic_keystone_leader_board(self, dungeon_id, period, cr_id=57):
         r = requests.get(f'https://us.api.blizzard.com/data/wow/connected-realm/{str(cr_id)}/mythic-leaderboard/{str(dungeon_id)}/period/{str(period)}?namespace=dynamic-us&locale=en_US&access_token={self.access_token}')
         return r.json()
 
@@ -60,7 +60,7 @@ class Blizzard:
         r = requests.get(f'https://us.api.blizzard.com/data/wow/playable-specialization/index?namespace=static-us&locale=en_US&access_token={self.access_token}')
         return r.json()
 
-    def game_mythic_keystone_seasons(self):
+    def game_mythic_keystone_seasons_index(self):
         r = requests.get(f'https://us.api.blizzard.com/data/wow/mythic-keystone/season/index?namespace=dynamic-us&locale=en_US&access_token={self.access_token}')
         return r.json()
 
@@ -101,10 +101,10 @@ class Blizzard:
         return r.json() 
 
     def auction_house(self, cr_id=57):
-        r = requests.get(f'https://us.api.blizzard.com/data/wow/connected-realm/{str(cr_id)}/auctions?namespace=dynamic-us&locale=en_US&access_token={self.access_tokenself.access_token}')
+        r = requests.get(f'https://us.api.blizzard.com/data/wow/connected-realm/{str(cr_id)}/auctions?namespace=dynamic-us&locale=en_US&access_token={self.access_token}')
         return r.json()
 
 if __name__ == '__main__':
     obj = Blizzard()
-    a = obj.profile_character_media('opprobrioums', 'illidan')
+    a = obj.game_mythic_keystone_seasons_index()
     print(a)

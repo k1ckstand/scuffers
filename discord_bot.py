@@ -91,10 +91,12 @@ async def m_plus(ctx, name: str=None):
 @bot.command(name="get_discord_users")
 async def get_discord_users(ctx):
     for user in ctx.guild.members:
-        print(user.name)
-        print(user.id)
-        print(user.roles)
-
+        user_collection = {
+        'name': user.name,
+        'id': user.id,
+        'role': user.roles
+        }
+    db['discord_users'].insert_one(user_collection)
 
 
 bot.run(TOKEN)

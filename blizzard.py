@@ -105,6 +105,6 @@ class Blizzard:
         return r.json()
 
 if __name__ == '__main__':
-    obj = Blizzard()
-    a = obj.game_mythic_keystone_seasons_index()
-    print(a)
+    o = Blizzard()
+    r = o.profile_character_profile('opprobrioums', 'illidan')
+    print(r)

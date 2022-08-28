@@ -5,15 +5,24 @@ from discord import member
 import pymongo
 import discord
 import subprocess
-from discord.ext import commands
+from discord.ext import commands 
+from discord import message 
 import matplotlib.pyplot as plt
+from discord.ui import Button, View
+import calendar
+from datetime import date
+from blizzard import Blizzard
 
 TOKEN = os.getenv('DISCORD_TOKEN')
+
+blizzard = Blizzard()
 
 my_client = pymongo.MongoClient('mongodb://localhost:27017/')
 db = my_client['scuffers']
 
 intents = discord.Intents.all()
+guild = discord.Guild
+
 bot = commands.Bot(command_prefix='#', intents=intents)
 
 @bot.event
@@ -23,14 +32,17 @@ async def on_ready():
 @bot.command(name='wa_sound')
 async def wa_sound(ctx, s: str):
     """ 
-    Example: #wa_sound something
+    Example 1: #wa_sound something
     will create a ogg audio file that says \"something\"
+    Example 2: #wa_sound \"run away\"
+    Create an ogg audio file that plays \"run away\"
     """ 
     if s.isalpha():
-        with open('/tmp/{}'.format(s), 'w') as f:
+        with open(f'/tmp/{s}', 'w') as f:
             subprocess.run(['espeak', s, '--stdout'], stdout=f)
-        subprocess.run(['oggenc', '-q', '5', '/tmp/{}'.format(s), '-o', '/tmp/{}.ogg'.format(s)])
-        await ctx.send(file=discord.File('/tmp/{}.ogg'.format(s)))
+        # subprocess.run([f'oggenc', '-q', '5', '/tmp/{s}', '-o', f'/tmp/{s}.ogg'])
+            subprocess.run(['VLC', '-I', 'dummy', s, '--sout="#transcode{acodec=mpga, ab=192}:standard{access=file,mux=ogg,dst=a.oog}', 'vlc://quit'])
+        await ctx.send(file=discord.File(f'/tmp/a.ogg'))
         os.remove('/tmp/{}'.format(s))
         os.remove('/tmp/{}.ogg'.format(s))
     else:
@@ -53,7 +65,7 @@ async def covenant(ctx):
 
     labels = sorted(list(set(all_players)))
     size = []
-    colors = []
+    colors = []     
     for label in labels:
         size.append(collection.count_documents({'covenant': label, 'is_main': True}) / len(all_players))
         colors.append(covenant_color[label])
@@ -97,6 +109,46 @@ async def get_discord_users(ctx):
         'role': user.roles
         }
     db['discord_users'].insert_one(user_collection)
+
+@bot.command(name='button_test')
+async def button_test(ctx):
+
+    RAID_NIGHTS = ['Wednesday', 'Thursday']
+    found_dates = list()
+    d = date.today()
+    j = d.toordinal()
+    while len(found_dates) != len(RAID_NIGHTS):
+        d = date.fromordinal(j)
+        x = calendar.day_name[d.weekday()]
+        if x in RAID_NIGHTS:
+            found_dates.append(d)
+        j += 1
+    for d in found_dates:
+
+        button_yes  = Button(label='Yes', custom_id=d.strftime('%A'), style=discord.ButtonStyle.green) 
+        button_late = Button(label='late', style=discord.ButtonStyle.secondary) 
+        button_no   = Button(label='no', style=discord.ButtonStyle.red) 
+        view = View()
+        view.add_item(button_yes)
+        view.add_item(button_late)
+        view.add_item(button_no)
+        await ctx.send(d.strftime("%A, %B %d"))
+        await ctx.send(view=view)
+
+import json
+@bot.command(name='player_lookup')
+async def player_lookup(ctx, message):
+    '''player_name server_name'''
+    await ctx.message('something goes here', reason=None)
+    await create_thread("something")
+    # name = name.lower().strip()
+    # server = name.lower().strip()
+    # print(f'{name} : {server}')
+    # try:
+    #     profile = blizzard.profile_character_profile(name, server)
+    #     await ctx.send(json.dumps(profile, indent=2))
+    # except Exception as e:
+    #     await ctx.send()
 
 
 bot.run(TOKEN)

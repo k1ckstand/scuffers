@@ -1,11 +1,10 @@
 #!/usr/bin/env python3
 
-import io
+import base64
 import pymongo
-import urllib
-from PIL import Image
+import requests
 from blizzard import Blizzard
-
+from PIL import Image
 blizzard = Blizzard()
 
 client = pymongo.MongoClient('mongodb://localhost:27017/')
@@ -13,15 +12,15 @@ db = client['scuffers']
 collection = db['class_info']
 
 spec_type = {
-    62: 'range',
-    63: 'range',
-    64: 'range',
-    65: 'range',
-    66: 'melee',
-    70: 'melee',
-    71: 'melee',
-    72: 'melee',
-    73: 'melee',
+    62:  'range',
+    63:  'range',
+    64:  'range',
+    65:  'range',
+    66:  'melee',
+    70:  'melee',
+    71:  'melee',
+    72:  'melee',
+    73:  'melee',
     102: 'range',
     103: 'melee',
     104: 'melee',
@@ -48,40 +47,40 @@ spec_type = {
     269: 'melee',
     270: 'range',
     577: 'melee',
-    581: 'melee'
+    581: 'melee',
 }
 
 gear_type = {
-    1: "plate",
-    2: "plate",
-    3: "mail",
-    4: "leather",
-    5: "cloth",
-    6: "plate",
-    7: "mail",
-    8: "cloth",
-    9: "cloth",
-    10: "leather",
-    11: "leather",
-    12: "leather"
+    1:  'plate',
+    2:  'plate',
+    3:  'mail',
+    4:  'leather',
+    5:  'cloth',
+    6:  'plate',
+    7:  'mail',
+    8:  'cloth',
+    9:  'cloth',
+    10: 'leather',
+    11: 'leather',
+    12: 'leather',
 }
 
 class_color = {
-    'warrior': '#C79C6E',
-    'mage': '#40C7EB',
-    'rogue': '#FFF569',
-    'druid': '#FF7D0A',
-    'warlock': '#8787ED',
-    'shaman': '#0070DE',
-    'monk': '#00FF96',
-    'hunter': '#A9D271',
-    'paladin': '#F58CBA',
+    'warrior':      '#C79C6E',
+    'mage':         '#40C7EB',
+    'rogue':        '#FFF569',
+    'druid':        '#FF7D0A',
+    'warlock':      '#8787ED',
+    'shaman':       '#0070DE',
+    'monk':         '#00FF96',
+    'hunter':       '#A9D271',
+    'paladin':      '#F58CBA',
     'demon hunter': '#A330C9',
     'death knight': '#C41F3B',
-    'priest': '#FFFFFF'
+    'priest':       '#FFFFFF'
 }
 
-def init_setup():
+def init_setup() -> None:
     collection.delete_many({})
 
     class_indexes = blizzard.game_playable_class_index()
@@ -97,16 +96,13 @@ def init_setup():
             'specialization': dict()
         } 
 
-        img_bytes   = io.BytesIO()
         class_media = current_class['_links']['self']['href']
         class_media = blizzard.generic_call(class_media)
         class_media = class_media['media']['key']['href']
         class_media = blizzard.generic_call(class_media)
         class_media = class_media['assets'][0]['value']
-        urllib.request.urlretrieve(class_media, f"/tmp/{current_class['name']}.jpg")
-        with Image.open(f'/tmp/{current_class["name"]}.jpg') as class_img:
-            class_img.save(img_bytes, format='JPEG')
-            class_dict[current_class['name']]['image']=img_bytes.getvalue()
+        r = requests.get(class_media)
+        class_dict[current_class['name']]['image']=r.content
 
         for specialization in current_class['specializations']:
             current_specialization = blizzard.game_playable_specialization(specialization['id'])
@@ -118,14 +114,11 @@ def init_setup():
             'role_type': spec_type[current_specialization['id']],
             }
 
-            img_bytes  = io.BytesIO()
             spec_media = current_specialization['media']['key']['href']
             spec_media = blizzard.generic_call(spec_media)
             spec_media = spec_media['assets'][0]['value']
-            urllib.request.urlretrieve(spec_media, f"/tmp/{current_specialization['name']}")
-            with Image.open(f"/tmp/{current_specialization['name']}") as spec_img:
-                spec_img.save(img_bytes, format='JPEG')
-                specialization_dict['image'] = img_bytes.getvalue()
+            r = requests.get(spec_media)
+            specialization_dict['image'] = r.content
             class_dict[current_class['name']]['specialization'][current_specialization['name']]=specialization_dict
         collection.insert_one(class_dict)
     print('DONE')

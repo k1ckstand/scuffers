@@ -3,8 +3,6 @@
 import pymongo
 import requests
 from blizzard import Blizzard
-from PIL import Image
-blizzard = Blizzard()
 
 client = pymongo.MongoClient('mongodb://localhost:27017/')
 db = client['scuffers']
@@ -79,13 +77,13 @@ class_color = {
     'priest':       '#FFFFFF'
 }
 
-def init_setup() -> None:
+def main() -> None:
     collection.delete_many({})
 
-    class_indexes = blizzard.game_playable_class_index()
+    class_indexes = blizzard.playable_class_index()
 
     for class_index in class_indexes['classes']:
-        current_class = blizzard.game_playable_class(class_index['id'])
+        current_class = blizzard.playable_class(class_index['id'])
         print(current_class['name'])
         class_dict = dict()   
         class_dict[current_class['name']] = {
@@ -96,15 +94,15 @@ def init_setup() -> None:
         } 
 
         class_media = current_class['_links']['self']['href']
-        class_media = blizzard.generic_call(class_media)
+        class_media = blizzard.generic_call_with_token(class_media)
         class_media = class_media['media']['key']['href']
-        class_media = blizzard.generic_call(class_media)
+        class_media = blizzard.generic_call_with_token(class_media)
         class_media = class_media['assets'][0]['value']
         r = requests.get(class_media)
         class_dict[current_class['name']]['image']=r.content
 
         for specialization in current_class['specializations']:
-            current_specialization = blizzard.game_playable_specialization(specialization['id'])
+            current_specialization = blizzard.playable_specialization(specialization['id'])
             print(f"\t{current_specialization['name']}")
             
             specialization_dict = {
@@ -114,13 +112,14 @@ def init_setup() -> None:
             }
 
             spec_media = current_specialization['media']['key']['href']
-            spec_media = blizzard.generic_call(spec_media)
+            spec_media = blizzard.generic_call_without_token(spec_media)
             spec_media = spec_media['assets'][0]['value']
-            r = requests.get(spec_media)
+            r = blizzard.generic_call_without_token(spec_media)
             specialization_dict['image'] = r.content
             class_dict[current_class['name']]['specialization'][current_specialization['name']]=specialization_dict
         collection.insert_one(class_dict)
     print('DONE')
 
 if __name__ == '__main__':
-    init_setup()
+    blizzard = Blizzard()
+    main()

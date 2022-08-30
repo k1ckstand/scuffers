@@ -11,8 +11,6 @@ client = pymongo.MongoClient('mongodb://localhost:27017/')
 db = client['scuffers']
 collection = db['guild_members']
 
-blizzard = Blizzard()
-
 def get_profile(name: str, server: str, discord: str, my_main: bool, raid_lead: bool, n=3) -> None:
     IMG_PATH = '/mnt/disk0/media/player/'
     character_profile = blizzard.profile_character_profile(name, server)
@@ -70,4 +68,5 @@ def main():
             thread.join()
 
 if __name__ == '__main__':
+    blizzard = Blizzard()
     main()

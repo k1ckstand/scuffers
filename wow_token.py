@@ -10,6 +10,8 @@ def main() -> None:
         if not collection.find_one({'last_updated_timestamp': wow_token['last_updated_timestamp']}):
             collection.insert_one(wow_token)
             print('DONE!')
+        else:
+            print('DONE! No Insertion')
     except ValueError as v:
         print('BAD REQUEST')
         print(v)
